@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/laiambryant/observability-utils/ingest_telemetry_go/stats"
-	"github.com/laiambryant/observability-utils/ingest_telemetry_go/structs"
+	"github.com/laiambryant/telemetry_ingestor/stats"
+	"github.com/laiambryant/telemetry_ingestor/structs"
 )
 
 // sendToOTel sends telemetry data to the OpenTelemetry collector

@@ -1,4 +1,4 @@
-module github.com/laiambryant/observability-utils/ingest_telemetry_go
+module github.com/laiambryant/telemetry_ingestor
 
 go 1.21
 

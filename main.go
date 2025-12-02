@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/laiambryant/observability-utils/ingest_telemetry_go/config"
-	"github.com/laiambryant/observability-utils/ingest_telemetry_go/processor"
+	"github.com/laiambryant/telemetry_ingestor/config"
+	"github.com/laiambryant/telemetry_ingestor/processor"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +33,6 @@ func init() {
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
-
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
