@@ -7,10 +7,10 @@ import (
 	"os"
 	"sync"
 
-	"github.com/laiambryant/telemetry_ingestor/config"
-	"github.com/laiambryant/telemetry_ingestor/sender"
-	"github.com/laiambryant/telemetry_ingestor/stats"
-	s "github.com/laiambryant/telemetry_ingestor/structs"
+	"github.com/laiambryant/telemetry-ingestor/config"
+	"github.com/laiambryant/telemetry-ingestor/sender"
+	"github.com/laiambryant/telemetry-ingestor/stats"
+	s "github.com/laiambryant/telemetry-ingestor/structs"
 )
 
 // LastTelemetryData holds the last occurrence of each telemetry type

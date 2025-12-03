@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"sync"
 
-	s "github.com/laiambryant/telemetry_ingestor/structs"
+	s "github.com/laiambryant/telemetry-ingestor/structs"
 )
 
 // SendStats tracks success and failure counts for sending telemetry

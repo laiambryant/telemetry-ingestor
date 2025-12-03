@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/laiambryant/telemetry_ingestor/config"
-	"github.com/laiambryant/telemetry_ingestor/processor"
+	"github.com/laiambryant/telemetry-ingestor/config"
+	"github.com/laiambryant/telemetry-ingestor/processor"
 	"github.com/spf13/cobra"
 )
 

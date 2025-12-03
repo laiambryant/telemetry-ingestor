@@ -1,6 +1,6 @@
 # Telemetry Ingestor
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/laiambryant/telemetry_ingestor.svg)](https://pkg.go.dev/github.com/laiambryant/telemetry-ingestor)
+[![Go Reference](https://pkg.go.dev/badge/github.com/laiambryant/telemetry-ingestor.svg)](https://pkg.go.dev/github.com/laiambryant/telemetry-ingestor)
 [![Go Report Card](https://goreportcard.com/badge/github.com/laiambryant/telemetry-ingestor)](https://goreportcard.com/report/github.com/laiambryant/telemetry-ingestor)
 [![GitHub license](https://img.shields.io/github/license/laiambryant/telemetry-ingestor.svg)](https://github.com/laiambryant/telemetry-ingestor/blob/main/LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/laiambryant/telemetry-ingestor.svg)](https://github.com/laiambryant/telemetry-ingestor/issues)

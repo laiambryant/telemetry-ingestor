@@ -1,4 +1,4 @@
-module github.com/laiambryant/telemetry_ingestor
+module github.com/laiambryant/telemetry-ingestor
 
 go 1.21
 
