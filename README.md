@@ -1,11 +1,11 @@
 # Telemetry Ingestor
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/laiambryant/telemetry_ingestor.svg)](https://pkg.go.dev/github.com/laiambryant/telemetry_ingestor)
-[![Go Report Card](https://goreportcard.com/badge/github.com/laiambryant/telemetry_ingestor)](https://goreportcard.com/report/github.com/laiambryant/telemetry_ingestor)
-[![GitHub license](https://img.shields.io/github/license/laiambryant/telemetry_ingestor.svg)](https://github.com/laiambryant/telemetry_ingestor/blob/main/LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/laiambryant/telemetry_ingestor.svg)](https://github.com/laiambryant/telemetry_ingestor/issues)
-[![GitHub stars](https://img.shields.io/github/stars/laiambryant/telemetry_ingestor.svg)](https://github.com/laiambryant/telemetry_ingestor/stargazers)
-[![Coverage Status](https://coveralls.io/repos/github/laiambryant/telemetry_ingestor/badge.svg?branch=main)](https://coveralls.io/github/laiambryant/telemetry_ingestor?branch=main)
+[![Go Reference](https://pkg.go.dev/badge/github.com/laiambryant/telemetry_ingestor.svg)](https://pkg.go.dev/github.com/laiambryant/telemetry-ingestor)
+[![Go Report Card](https://goreportcard.com/badge/github.com/laiambryant/telemetry-ingestor)](https://goreportcard.com/report/github.com/laiambryant/telemetry-ingestor)
+[![GitHub license](https://img.shields.io/github/license/laiambryant/telemetry-ingestor.svg)](https://github.com/laiambryant/telemetry-ingestor/blob/main/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/laiambryant/telemetry-ingestor.svg)](https://github.com/laiambryant/telemetry-ingestor/issues)
+[![GitHub stars](https://img.shields.io/github/stars/laiambryant/telemetry-ingestor.svg)](https://github.com/laiambryant/telemetry-ingestor/stargazers)
+[![Coverage Status](https://coveralls.io/repos/github/laiambryant/telemetry-ingestor/badge.svg?branch=main)](https://coveralls.io/github/laiambryant/telemetry-ingestor?branch=main)
 
 ![Kirby](doc/img/ingestor.png)
 
