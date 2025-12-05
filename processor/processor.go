@@ -13,7 +13,6 @@ import (
 	s "github.com/laiambryant/telemetry-ingestor/structs"
 )
 
-// LastTelemetryData holds the last occurrence of each telemetry type
 type LastTelemetryData struct {
 	Traces  s.TelemetryData
 	Logs    s.TelemetryData
@@ -26,7 +25,6 @@ const (
 	resourceMetricsField = "resourceMetrics"
 )
 
-// OpenTelemetryFile opens a telemetry file and returns a scanner configured with the buffer capacity
 func OpenTelemetryFile(filePath string, maxBufferCapacity int) (*os.File, *bufio.Scanner, error) {
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
@@ -45,7 +43,6 @@ func OpenTelemetryFile(filePath string, maxBufferCapacity int) (*os.File, *bufio
 	return file, scanner, nil
 }
 
-// ParseTelemetryLine parses a JSON line into TelemetryData
 func ParseTelemetryLine(line string, lineNum int) (s.TelemetryData, error) {
 	if len(line) == 0 {
 		return nil, nil
@@ -60,7 +57,6 @@ func ParseTelemetryLine(line string, lineNum int) (s.TelemetryData, error) {
 	return data, nil
 }
 
-// ProcessTelemetryInSendAllMode processes telemetry data and sends all occurrences via job channel
 func ProcessTelemetryInSendAllMode(data s.TelemetryData, lineNum int, config *config.Config, jobChan chan<- s.TelemetryJob) {
 	if _, hasTraces := data[resourceSpansField]; hasTraces {
 		payload := map[string]any{resourceSpansField: data[resourceSpansField]}
@@ -93,7 +89,6 @@ func ProcessTelemetryInSendAllMode(data s.TelemetryData, lineNum int, config *co
 	}
 }
 
-// UpdateLastTelemetryData updates the last occurrence of each telemetry type
 func UpdateLastTelemetryData(data s.TelemetryData, lastData *LastTelemetryData) {
 	if _, hasTraces := data[resourceSpansField]; hasTraces {
 		lastData.Traces = data
@@ -106,12 +101,11 @@ func UpdateLastTelemetryData(data s.TelemetryData, lastData *LastTelemetryData) 
 	}
 }
 
-// StartWorkerPool starts a pool of workers to process telemetry jobs
 func StartWorkerPool(numWorkers int, stats *stats.SendStats) (chan s.TelemetryJob, *sync.WaitGroup) {
 	jobChan := make(chan s.TelemetryJob, numWorkers*2)
 	wg := &sync.WaitGroup{}
 
-	for i := range numWorkers {
+	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		go worker(i+1, jobChan, wg, stats)
 	}
@@ -119,10 +113,8 @@ func StartWorkerPool(numWorkers int, stats *stats.SendStats) (chan s.TelemetryJo
 	return jobChan, wg
 }
 
-// ProcessFileInSendAllMode reads and processes all telemetry data from file, sending each occurrence
 func ProcessFileInSendAllMode(scanner *bufio.Scanner, config *config.Config, stats *stats.SendStats) error {
 	jobChan, wg := StartWorkerPool(config.Workers, stats)
-	defer close(jobChan)
 
 	lineNum := 0
 	lineCount := 0
@@ -145,6 +137,8 @@ func ProcessFileInSendAllMode(scanner *bufio.Scanner, config *config.Config, sta
 	}
 
 	slog.Info("Finished reading file", "total_lines", lineCount)
+
+	close(jobChan)
 	slog.Info("Waiting for workers to finish")
 	wg.Wait()
 	stats.PrintSummary()
@@ -152,7 +146,6 @@ func ProcessFileInSendAllMode(scanner *bufio.Scanner, config *config.Config, sta
 	return nil
 }
 
-// ProcessFileInLastMode reads and processes telemetry data, keeping only the last occurrence of each type
 func ProcessFileInLastMode(scanner *bufio.Scanner) (*LastTelemetryData, int, error) {
 	lastData := &LastTelemetryData{}
 	lineNum := 0
@@ -179,7 +172,6 @@ func ProcessFileInLastMode(scanner *bufio.Scanner) (*LastTelemetryData, int, err
 	return lastData, lineCount, nil
 }
 
-// SendLastTelemetryData sends the last occurrence of each telemetry type to the OTel collector
 func SendLastTelemetryData(lastData *LastTelemetryData, config *config.Config, stats *stats.SendStats) {
 	slog.Info("Sending last instances to OTel Collector")
 
@@ -213,7 +205,6 @@ func SendLastTelemetryData(lastData *LastTelemetryData, config *config.Config, s
 	stats.PrintSummary()
 }
 
-// IngestTelemetry reads and processes telemetry data from a file
 func IngestTelemetry(filePath string, cfg *config.Config) error {
 	slog.Info("Reading telemetry data", "file", filePath)
 	if cfg.SendAll {
@@ -243,7 +234,6 @@ func IngestTelemetry(filePath string, cfg *config.Config) error {
 	return nil
 }
 
-// worker processes telemetry jobs from a channel
 func worker(id int, jobs <-chan s.TelemetryJob, wg *sync.WaitGroup, stats *stats.SendStats) {
 	defer wg.Done()
 	for job := range jobs {
