@@ -105,7 +105,7 @@ func StartWorkerPool(numWorkers int, stats *stats.SendStats) (chan s.TelemetryJo
 	jobChan := make(chan s.TelemetryJob, numWorkers*2)
 	wg := &sync.WaitGroup{}
 
-	for i := 0; i < numWorkers; i++ {
+	for i := range numWorkers {
 		wg.Add(1)
 		go worker(i+1, jobChan, wg, stats)
 	}
