@@ -82,6 +82,7 @@ func TestIngestTelemetryLastMode(t *testing.T) {
 		`{"resourceSpans":[{"id":1}]}
 {"resourceSpans":[{"id":2}]}
 {"resourceLogs":[]}
+{"resourceSpans":[]}.
 {"resourceMetrics":[]}`,
 		false,
 		IngestResult{TracesReceived: 1, LogsReceived: 1, MetricsReceived: 1, ErrorOccurred: false},
