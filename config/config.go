@@ -15,6 +15,7 @@ type Config struct {
 	MaxBufferCapacity   int
 	SendAll             bool
 	Workers             int
+	FilePattern         string
 }
 
 // NewConfig creates a new Config with default values
@@ -27,5 +28,6 @@ func NewConfig() *Config {
 		MaxBufferCapacity:   1024 * 1024,
 		SendAll:             false,
 		Workers:             10,
+		FilePattern:         "*.json",
 	}
 }
