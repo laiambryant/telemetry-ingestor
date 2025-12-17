@@ -11,8 +11,8 @@ import (
 	"github.com/laiambryant/telemetry-ingestor/processor"
 )
 
-// ProcessZipFile reads files from a zip archive, filters by cfg.FilePattern, and ingests each matched entry.
-// It returns the count of successfully processed (ingested) files.
+const tempFilePattern = "zip-extract-*.tmp"
+
 func ProcessZipFile(zipPath string, cfg *config.Config) (int, error) {
 	slog.Info("Processing zip file", "file", zipPath)
 	reader, err := zip.OpenReader(zipPath)
@@ -20,7 +20,19 @@ func ProcessZipFile(zipPath string, cfg *config.Config) (int, error) {
 		return 0, err
 	}
 	defer reader.Close()
-	processedCount := 0
+
+	matchedFiles := countMatchingFiles(reader, cfg)
+	if matchedFiles == 0 {
+		slog.Info("No matching files in zip", "zip", zipPath, "pattern", cfg.FilePattern)
+		return 0, nil
+	}
+
+	slog.Info("Found matching files in zip", "zip", zipPath, "count", matchedFiles)
+	processedCount := processMatchingFiles(reader, zipPath, matchedFiles, cfg)
+	return processedCount, nil
+}
+
+func countMatchingFiles(reader *zip.ReadCloser, cfg *config.Config) int {
 	matchedFiles := 0
 	for _, file := range reader.File {
 		if file.FileInfo().IsDir() {
@@ -34,11 +46,11 @@ func ProcessZipFile(zipPath string, cfg *config.Config) (int, error) {
 			matchedFiles++
 		}
 	}
-	if matchedFiles == 0 {
-		slog.Info("No matching files in zip", "zip", zipPath, "pattern", cfg.FilePattern)
-		return 0, nil
-	}
-	slog.Info("Found matching files in zip", "zip", zipPath, "count", matchedFiles)
+	return matchedFiles
+}
+
+func processMatchingFiles(reader *zip.ReadCloser, zipPath string, matchedFiles int, cfg *config.Config) int {
+	processedCount := 0
 	for _, file := range reader.File {
 		if file.FileInfo().IsDir() {
 			continue
@@ -49,12 +61,12 @@ func ProcessZipFile(zipPath string, cfg *config.Config) (int, error) {
 		}
 		slog.Info("Processing file from zip", "index", processedCount+1, "total", matchedFiles, "file", file.Name, "zip", zipPath)
 		if err := processZipEntry(file, cfg); err != nil {
-			slog.Error("Error processing file from zip", "file", file.Name, "zip", zipPath, "error", err)
+			slog.Warn("Error processing file from zip", "file", file.Name, "zip", zipPath, "error", err)
 			continue
 		}
 		processedCount++
 	}
-	return processedCount, nil
+	return processedCount
 }
 
 func processZipEntry(file *zip.File, cfg *config.Config) error {
@@ -63,12 +75,11 @@ func processZipEntry(file *zip.File, cfg *config.Config) error {
 		return err
 	}
 	defer rc.Close()
-	tmpFile, err := os.CreateTemp("", "zip-extract-*.tmp")
+	tmpFile, err := createTempfile()
 	if err != nil {
 		return err
 	}
-	tmpPath := tmpFile.Name()
-	defer os.Remove(tmpPath)
+	defer os.Remove(tmpFile.Name())
 	if _, err := io.Copy(tmpFile, rc); err != nil {
 		_ = tmpFile.Close()
 		return err
@@ -77,5 +88,13 @@ func processZipEntry(file *zip.File, cfg *config.Config) error {
 	if err := tmpFile.Close(); err != nil {
 		return err
 	}
-	return processor.IngestTelemetry(tmpPath, cfg)
+	return processor.IngestTelemetry(tmpFile.Name(), cfg)
+}
+
+func createTempfile() (file *os.File, err error) {
+	tmpFile, err := os.CreateTemp("", tempFilePattern)
+	if err != nil {
+		return nil, err
+	}
+	return tmpFile, nil
 }
