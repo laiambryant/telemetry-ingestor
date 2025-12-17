@@ -11,7 +11,7 @@ import (
 	"github.com/laiambryant/telemetry-ingestor/processor"
 )
 
-const tempFilePattern = "zip-extract-*.tmp"
+const TEMP_FILE_PATTERN = "zip-extract-*.tmp"
 
 func ProcessZipFile(zipPath string, cfg *config.Config) (int, error) {
 	slog.Info("Processing zip file", "file", zipPath)
@@ -20,13 +20,11 @@ func ProcessZipFile(zipPath string, cfg *config.Config) (int, error) {
 		return 0, err
 	}
 	defer reader.Close()
-
 	matchedFiles := countMatchingFiles(reader, cfg)
 	if matchedFiles == 0 {
 		slog.Info("No matching files in zip", "zip", zipPath, "pattern", cfg.FilePattern)
 		return 0, nil
 	}
-
 	slog.Info("Found matching files in zip", "zip", zipPath, "count", matchedFiles)
 	processedCount := processMatchingFiles(reader, zipPath, matchedFiles, cfg)
 	return processedCount, nil
@@ -92,7 +90,7 @@ func processZipEntry(file *zip.File, cfg *config.Config) error {
 }
 
 func createTempfile() (file *os.File, err error) {
-	tmpFile, err := os.CreateTemp("", tempFilePattern)
+	tmpFile, err := os.CreateTemp("", TEMP_FILE_PATTERN)
 	if err != nil {
 		return nil, err
 	}
