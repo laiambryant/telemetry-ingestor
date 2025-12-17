@@ -1,13 +1,12 @@
 package main
 
 import (
-	"archive/zip"
-	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/laiambryant/telemetry-ingestor/compression"
 	"github.com/laiambryant/telemetry-ingestor/config"
 	"github.com/laiambryant/telemetry-ingestor/processor"
 	"github.com/spf13/cobra"
@@ -119,7 +118,7 @@ func runIngestFolder(cmd *cobra.Command, args []string) error {
 	if len(zipFiles) > 0 {
 		slog.Info("Found zip files", "zip_count", len(zipFiles))
 		for _, zipFile := range zipFiles {
-			processedCount, err := processZipFile(zipFile, cfg)
+			processedCount, err := compression.ProcessZipFile(zipFile, cfg)
 			if err != nil {
 				slog.Error("Error processing zip file", "file", zipFile, "error", err)
 				continue
@@ -131,69 +130,4 @@ func runIngestFolder(cmd *cobra.Command, args []string) error {
 
 	slog.Info("Folder processing complete", "total_files", totalFiles, "processed", filesProcessed)
 	return nil
-}
-
-func processZipFile(zipPath string, cfg *config.Config) (int, error) {
-	slog.Info("Processing zip file", "file", zipPath)
-	reader, err := zip.OpenReader(zipPath)
-	if err != nil {
-		return 0, err
-	}
-	defer reader.Close()
-	processedCount := 0
-	matchedFiles := 0
-	for _, file := range reader.File {
-		if file.FileInfo().IsDir() {
-			continue
-		}
-		matched, err := filepath.Match(cfg.FilePattern, filepath.Base(file.Name))
-		if err != nil {
-			continue
-		}
-		if matched {
-			matchedFiles++
-		}
-	}
-	if matchedFiles == 0 {
-		slog.Info("No matching files in zip", "zip", zipPath, "pattern", cfg.FilePattern)
-		return 0, nil
-	}
-	slog.Info("Found matching files in zip", "zip", zipPath, "count", matchedFiles)
-	for _, file := range reader.File {
-		if file.FileInfo().IsDir() {
-			continue
-		}
-		matched, err := filepath.Match(cfg.FilePattern, filepath.Base(file.Name))
-		if err != nil || !matched {
-			continue
-		}
-		slog.Info("Processing file from zip", "index", processedCount+1, "total", matchedFiles, "file", file.Name, "zip", zipPath)
-		if err := processZipEntry(file, cfg); err != nil {
-			slog.Error("Error processing file from zip", "file", file.Name, "zip", zipPath, "error", err)
-			continue
-		}
-		processedCount++
-	}
-	return processedCount, nil
-}
-
-func processZipEntry(file *zip.File, cfg *config.Config) error {
-	rc, err := file.Open()
-	if err != nil {
-		return err
-	}
-	defer rc.Close()
-	tmpFile, err := os.CreateTemp("", "zip-extract-*.tmp")
-	if err != nil {
-		return err
-	}
-	tmpPath := tmpFile.Name()
-	defer os.Remove(tmpPath)
-	if _, err := io.Copy(tmpFile, rc); err != nil {
-		tmpFile.Close()
-		return err
-	}
-	slog.Info("unzipped file", "name", tmpFile.Name())
-	tmpFile.Close()
-	return processor.IngestTelemetry(tmpPath, cfg)
 }
