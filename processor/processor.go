@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"log/slog"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 
+	"github.com/laiambryant/telemetry-ingestor/compression"
 	"github.com/laiambryant/telemetry-ingestor/config"
 	"github.com/laiambryant/telemetry-ingestor/sender"
 	"github.com/laiambryant/telemetry-ingestor/stats"
@@ -241,4 +244,96 @@ func worker(id int, jobs <-chan s.TelemetryJob, wg *sync.WaitGroup, stats *stats
 			slog.Error("Worker failed to send telemetry", "worker", id, "type", job.TelemetryType, "line", job.LineNum, "error", err)
 		}
 	}
+}
+
+func IngestFolder(folderPath string, cfg *config.Config) error {
+	files, zipFiles, err := collectFiles(folderPath, cfg.FilePattern)
+	if err != nil {
+		slog.Error("Error walking directory", "folder", folderPath, "error", err)
+		return err
+	}
+
+	if len(files) == 0 && len(zipFiles) == 0 {
+		slog.Warn("No files found matching pattern", "folder", folderPath, "pattern", cfg.FilePattern)
+		return nil
+	}
+
+	totalFiles := len(files)
+	filesProcessed := processRegularFiles(files, cfg)
+
+	if len(zipFiles) > 0 {
+		zipProcessed, zipTotal := processZipFiles(zipFiles, cfg)
+		totalFiles += zipTotal
+		filesProcessed += zipProcessed
+	}
+
+	slog.Info("Folder processing complete", "total_files", totalFiles, "processed", filesProcessed)
+	return nil
+}
+
+func collectFiles(folderPath, pattern string) ([]string, []string, error) {
+	var files []string
+	var zipFiles []string
+
+	err := filepath.WalkDir(folderPath, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			slog.Warn("Error accessing path", "path", path, "error", err)
+			return nil
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if strings.HasSuffix(strings.ToLower(path), ".zip") {
+			zipFiles = append(zipFiles, path)
+			return nil
+		}
+		matched, err := filepath.Match(pattern, filepath.Base(path))
+		if err != nil {
+			return nil
+		}
+		if matched {
+			files = append(files, path)
+		}
+		return nil
+	})
+
+	return files, zipFiles, err
+}
+
+func processRegularFiles(files []string, cfg *config.Config) int {
+	if len(files) == 0 {
+		return 0
+	}
+
+	filesProcessed := 0
+	slog.Info("Processing folder", "pattern", cfg.FilePattern, "file_count", len(files))
+
+	for i, file := range files {
+		slog.Info("Processing file", "index", i+1, "total", len(files), "file", file)
+		if err := IngestTelemetry(file, cfg); err != nil {
+			slog.Error("Error processing file", "file", file, "error", err)
+			continue
+		}
+		filesProcessed++
+	}
+
+	return filesProcessed
+}
+
+func processZipFiles(zipFiles []string, cfg *config.Config) (processed, total int) {
+	slog.Info("Found zip files", "zip_count", len(zipFiles))
+
+	for _, zipFile := range zipFiles {
+		processedCount, err := compression.ExtractAndProcessZipFiles(zipFile, cfg.FilePattern, func(filePath string) error {
+			return IngestTelemetry(filePath, cfg)
+		})
+		if err != nil {
+			slog.Error("Error processing zip file", "file", zipFile, "error", err)
+			continue
+		}
+		total += processedCount
+		processed += processedCount
+	}
+
+	return processed, total
 }

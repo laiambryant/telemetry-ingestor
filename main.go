@@ -3,10 +3,7 @@ package main
 import (
 	"log/slog"
 	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/laiambryant/telemetry-ingestor/compression"
 	"github.com/laiambryant/telemetry-ingestor/config"
 	"github.com/laiambryant/telemetry-ingestor/processor"
 	"github.com/spf13/cobra"
@@ -71,63 +68,5 @@ func runIngestFolder(cmd *cobra.Command, args []string) error {
 	if len(args) > 0 {
 		folderPath = args[0]
 	}
-	var files []string
-	var zipFiles []string
-	err := filepath.WalkDir(folderPath, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			slog.Warn("Error accessing path", "path", path, "error", err)
-			return nil
-		}
-		if d.IsDir() {
-			return nil
-		}
-		if strings.HasSuffix(strings.ToLower(path), ".zip") {
-			zipFiles = append(zipFiles, path)
-			return nil
-		}
-		matched, err := filepath.Match(cfg.FilePattern, filepath.Base(path))
-		if err != nil {
-			return nil
-		}
-		if matched {
-			files = append(files, path)
-		}
-		return nil
-	})
-	if err != nil {
-		slog.Error("Error walking directory", "folder", folderPath, "error", err)
-		return err
-	}
-	if len(files) == 0 && len(zipFiles) == 0 {
-		slog.Warn("No files found matching pattern", "folder", folderPath, "pattern", cfg.FilePattern)
-		return nil
-	}
-	totalFiles := len(files)
-	filesProcessed := 0
-	if len(files) > 0 {
-		slog.Info("Processing folder", "folder", folderPath, "pattern", cfg.FilePattern, "file_count", len(files))
-		for i, file := range files {
-			slog.Info("Processing file", "index", i+1, "total", len(files), "file", file)
-			if err := processor.IngestTelemetry(file, cfg); err != nil {
-				slog.Error("Error processing file", "file", file, "error", err)
-				continue
-			}
-			filesProcessed++
-		}
-	}
-	if len(zipFiles) > 0 {
-		slog.Info("Found zip files", "zip_count", len(zipFiles))
-		for _, zipFile := range zipFiles {
-			processedCount, err := compression.ProcessZipFile(zipFile, cfg)
-			if err != nil {
-				slog.Error("Error processing zip file", "file", zipFile, "error", err)
-				continue
-			}
-			totalFiles += processedCount
-			filesProcessed += processedCount
-		}
-	}
-
-	slog.Info("Folder processing complete", "total_files", totalFiles, "processed", filesProcessed)
-	return nil
+	return processor.IngestFolder(folderPath, cfg)
 }
