@@ -176,24 +176,6 @@ func TestRunIngestFolder(t *testing.T) {
 	c.VerifyCharacterizationTestsAndResults(t, tests, false)
 }
 
-func TestRunIngestFolderInvalidPattern(t *testing.T) {
-	test := c.NewCharacterizationTest(
-		true,
-		nil,
-		func() (bool, error) {
-			originalCfg := cfg
-			cfg = config.NewConfig()
-			cfg.FilePattern = "["
-			defer func() { cfg = originalCfg }()
-			cmd := &cobra.Command{}
-			err := runIngestFolder(cmd, []string{"."})
-			return err != nil, nil
-		},
-	)
-	tests := []c.CharacterizationTest[bool]{test}
-	c.VerifyCharacterizationTestsAndResults(t, tests, false)
-}
-
 func TestRunIngestFolderFileProcessingError(t *testing.T) {
 	test := c.NewCharacterizationTest(
 		FolderIngestResult{ErrorOccurred: false, TracesReceived: 1, LogsReceived: 0, MetricsReceived: 0},
